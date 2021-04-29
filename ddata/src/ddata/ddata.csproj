@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\common.props" />
+
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <Description>Your description here.</Description>
+        <OutputType>Exe</OutputType>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+      <PackageReference Include="Akka" Version="1.4.19" />
+      <PackageReference Include="Akka.DistributedData" Version="1.4.19" />
+      <PackageReference Include="Akka.DistributedData.LightningDB" Version="1.4.19" />
+      <PackageReference Include="Akka.Serialization.Hyperion" Version="1.4.19" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Folder Include="cluster-data" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <None Remove="HOCON" />
+      <Content Include="HOCON" CopyToOutputDirectory="Always" />
+      <None Remove="cluster-data\data.mdb" />
+      <Content Include="cluster-data\data.mdb">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+</Project>
