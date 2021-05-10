@@ -1,0 +1,42 @@
+﻿{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "ddata.cluster.1": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "akka__cluster__distributed-data__durable__lmdb__dir": "cluster-data1",
+        "akka__remote__dot-netty__tcp__port": "18001"
+       
+      }
+    },
+    "ddata.cluster.2": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "akka__cluster__distributed-data__durable__lmdb__dir": "cluster-data2",
+        "akka__remote__dot-netty__tcp__port": "18002"
+       
+      }
+    },
+    "ddata.cluster.3": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "akka__cluster__distributed-data__durable__lmdb__dir": "cluster-data3",
+        "akka__remote__dot-netty__tcp__port": "18003"
+      }
+    },
+    "ddata.cluster.4": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "akka__cluster__distributed-data__durable__lmdb__dir": "cluster-data4",
+        "akka__remote__dot-netty__tcp__port": "18004"
+      }
+    },
+    "ddata.cluster.5": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "akka__cluster__distributed-data__durable__lmdb__dir": "cluster-data5",
+        "akka__remote__dot-netty__tcp__port": "18005"
+      }
+    }
+  }
+}
