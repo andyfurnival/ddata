@@ -14,23 +14,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="cluster-data1\data.mdb">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="cluster-data2\data.mdb">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="cluster-data3\data.mdb">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="cluster-data4\data.mdb">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="cluster-data5\data.mdb">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
       <Content Include="HOCON">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
 
@@ -44,6 +29,13 @@
 
     <ItemGroup>
       <None Remove="obj\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="cluster-data2" />
+      <Folder Include="cluster-data3" />
+      <Folder Include="cluster-data4" />
+      <Folder Include="cluster-data5" />
     </ItemGroup>
 
 </Project>
