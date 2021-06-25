@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.Tracing;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -12,6 +13,7 @@ using Akka.Configuration.Hocon;
 using Akka.DistributedData;
 using Akka.Remote;
 using Akka.Bootstrap.Docker;
+using Akka.Util.Internal;
 
 namespace ddata.cluster
 {
@@ -26,9 +28,12 @@ namespace ddata.cluster
        /// <param name="args"></param>
         static void Main(string[] args)
        {
+           var durableKey = Environment.GetEnvironmentVariable("test");
            var finalConfig =  ConfigurationFactory.Empty.FromEnvironment();
-   
-            var cfg = finalConfig.WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("HOCON")))
+           Config durable = $"akka.cluster.distributed-data.durable.keys=[\"{durableKey}\"]";
+           
+  
+            var cfg = durable.WithFallback(finalConfig.WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("HOCON"))))
             .BootstrapFromDocker()
             .WithFallback(DistributedData.DefaultConfig());
 
@@ -39,22 +44,7 @@ namespace ddata.cluster
                 var cluster1 = Cluster.Get(Sys1);
                 cluster1.Join(Address.Parse($"akka.tcp://test@{cluster1.SelfAddress.Host}:18001"));
                 cluster1.RegisterOnMemberUp(()=> StartActors(Sys1));
-
-                var durableKey = Environment.GetEnvironmentVariable("test");
-                if (!string.IsNullOrEmpty(durableKey))
-                {
-                    Config durable = Config.Empty;
-                    durable = $"akka.cluster.distributed-data.durable.keys=[\"{durableKey}\"]";
-                    var durableConfig = durable
-                        .WithFallback(
-                            finalConfig.WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("HOCON"))))
-                        .BootstrapFromDocker()
-                        .WithFallback(DistributedData.DefaultConfig());
-                     ddataActorSystem = ActorSystem.Create("ddata", durableConfig);
-                     var clusterddata = Cluster.Get(ddataActorSystem);
-                     clusterddata.Join(Address.Parse($"akka.tcp://ddata@{cluster1.SelfAddress.Host}:18001"));
-                    MigrateDData(ddataActorSystem,Sys1);
-                }
+                
             });
             
             
@@ -76,83 +66,42 @@ namespace ddata.cluster
                     case 'k':
                         GetDDataKeys(Sys1);
                         break;
-                    case 'u':
-                        UpdateMaster(Sys1, ddataActorSystem);
-                        break;
                 }
             }
 
        }
 
-       private static async void MigrateDData(ActorSystem sourceSystem, ActorSystem targetSystem)
-       {
-           var replicatorSrc = DistributedData.Get(sourceSystem).Replicator;
-           
-           var resp = await replicatorSrc.Ask<GetKeysIdsResult>(Dsl.GetKeyIds);
-           
-           int emptyKeyCount = 0;
-           EventCounter = 0;
-           foreach (var resultKey in resp.Keys.OrderBy(x=> x))
-           {
-               EventCounter++;
-               var key = new ORSetKey<string>($"{resultKey}");
-
-               var keyResp = await replicatorSrc.Ask<IGetResponse>(Dsl.Get(key));
-               
-               if (keyResp.Get(key).Elements.Count == 0) continue;
-
-               Migrate(key, keyResp.Get(key).Elements, targetSystem);
-
-               
-           }  
-           
-       }
-
-       private static void UpdateMaster(ActorSystem source, ActorSystem target)
-       {
-           if (source == null) return;
-           if (target == null) return;
-
-           MigrateDData(source, target);
-
-       }
-
-       private static async void Migrate(ORSetKey<string> key, IImmutableSet<string> elements, ActorSystem targetSystem)
-       {
-           var cluster = Cluster.Get(targetSystem);
-           
-           var replicatorDst = DistributedData.Get(targetSystem).Replicator;
-
-           var writeConsistency = new WriteMajority(TimeSpan.FromSeconds(2));
-
-           foreach (var element in elements)
-           {
-               replicatorDst.Tell(Dsl.Update(key, ORSet<string>.Empty, writeConsistency,
-                   existing => existing.Add(cluster, element)));
-           }
-           
-       }
+       
+       
 
        private static async void GetDDataKeys(ActorSystem sys1)
        {
            var replicator = DistributedData.Get(sys1).Replicator;
            
-           var resp = await replicator.Ask<GetKeysIdsResult>(Dsl.GetKeyIds);
-           
-           int emptyKeyCount = 0;
-           foreach (var resultKey in resp.Keys.OrderBy(x=> x))
+           var key = new ORDictionaryKey<string, GSet<string>>("Event");
+
+           replicator.Ask(Dsl.Get(key)).ContinueWith(res =>
            {
-               EventCounter++;
-               var key = new ORSetKey<string>($"{resultKey}");
-
-               var keyResp = await replicator.Ask<IGetResponse>(Dsl.Get(key));
-
+               var result = res.Result as GetSuccess;
+               var elements = ((ORDictionary<string, GSet<string>>) result.Data).Entries;
                Console.ForegroundColor = ConsoleColor.Green;
-               if (keyResp.Get(key).Elements.Count == 0) emptyKeyCount++;
-                
-               Console.WriteLine($"{key.Id}\t{string.Join<string>(",", keyResp.Get(key).Elements)}");
-           }
+               int emptyKeyCount = 0;
+               elements.OrderBy(x=>x).ForEach(e =>
+               {
+                   Console.ForegroundColor = ConsoleColor.Green;
+                   if (e.Value.Count == 0)
+                   {
+                       Console.ForegroundColor = ConsoleColor.Red;
+                       emptyKeyCount++;
+                   }
+                   
+                   Console.WriteLine($"{e.Key}, {e.Value.Join(",")}");
+               });
+               Console.WriteLine($"There are {emptyKeyCount} empty keys");
+           });
        }
+       
+       
 
        private static int EventCounter = 0;
         

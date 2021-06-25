@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using Akka.Actor;
 using Akka.Cluster;
 using Akka.DistributedData;
@@ -32,19 +35,24 @@ namespace ddata.cluster
 
                 var cluster = Cluster.Get(Context.System);
                 var replicator = DistributedData.Get(Context.System).Replicator;
-
-                var key = new ORSetKey<string>($"Event-{message.EventId}");
-
                 var writeConsistency = new WriteMajority(TimeSpan.FromSeconds(2));
+                var registryKey = new ORDictionaryKey<string, GSet<string>>("Event");
 
-                replicator.Tell(Dsl.Update(key, ORSet<string>.Empty, writeConsistency,
-                    existing => existing.Add(cluster, message.Market)));
+                replicator.Tell(Dsl.Update(registryKey, ORDictionary<string, GSet<string>>.Empty,
+                    writeConsistency,
+                    x => x.SetItem(cluster, $"Event-{message.EventId}",
+                        new GSet<string>(ImmutableHashSet<string>.Empty.Add(message.Market)))));
 
-                var localEvent =
-                    replicator.Ask<IGetResponse>(Dsl.Get(key, ReadLocal.Instance));
 
-
-                Sender.Tell(localEvent.Result);
+                replicator.Ask(Dsl.Get(registryKey, ReadLocal.Instance)).ContinueWith(res =>
+                {
+                    var result = res.Result as GetSuccess;
+                    var elements = ((ORDictionary<string, GSet<string>>) result.Data).Entries;
+                    var market = elements.Where(x => x.Key.Equals($"Event-{message.EventId}"))
+                        .Select(x => x).FirstOrDefault();
+                    
+                    Sender.Tell(market);
+                });
             }
             catch (Exception e)
             {
@@ -55,7 +63,7 @@ namespace ddata.cluster
 
             }
         }
-        
+
         //The way our data works, I opted to just removed all the key data, but leave the key intact as sometimes i need to use the key again in rare instances, but once deleted, ddata doesn't allow this.
         private void HandleMessage(CloseEvent message)
         {
@@ -66,15 +74,28 @@ namespace ddata.cluster
                 var cluster = Cluster.Get(Context.System);
                 var key = new ORSetKey<string>($"Event-{message.EventId}");
                 var writeConsistency = WriteLocal.Instance;
-                replicator.Tell(Dsl.Update(key, ORSet<string>.Empty, writeConsistency, $"Event-{message.EventId}",
-                    existing =>
-                    {
-                        return existing.Clear(cluster);
-                    }));
+               
+                var registryKey = new ORDictionaryKey<string, GSet<string>>("Event");
 
-                var finalResult =
-                    replicator.Ask<IGetResponse>(Dsl.Get(key, ReadLocal.Instance));
-                Sender.Tell(finalResult.Result);
+                replicator.Tell(Dsl.Update(registryKey, ORDictionary<string, GSet<string>>.Empty,
+                    writeConsistency,
+                    x => x.Remove(cluster, $"Event-{message.EventId}"
+                        )));
+
+                replicator.Ask(Dsl.Get(registryKey, ReadLocal.Instance)).ContinueWith(res =>
+                {
+                    var result = res.Result as GetSuccess;
+                    var elements = ((ORDictionary<string, GSet<string>>) result.Data).Entries;
+                    var market = elements.Where(x => x.Key.Equals($"Event-{message.EventId}"))
+                        .Select(x => x).FirstOrDefault();
+
+                    var outcome = (market.Key == null && market.Value == null);
+             
+                    
+                    Sender.Tell(outcome);
+                });
+
+               
             }
             catch (DataDeletedException e)
             {

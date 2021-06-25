@@ -2,15 +2,15 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Akka" Version="1.4.19" />
-        <PackageReference Include="Akka.Bootstrap.Docker" Version="0.5.2" />
-        <PackageReference Include="Akka.DistributedData" Version="1.4.19" />
-        <PackageReference Include="Akka.DistributedData.LightningDB" Version="1.4.19" />
-        <PackageReference Include="Akka.Serialization.Hyperion" Version="1.4.19" />
+        <PackageReference Include="Akka" Version="1.4.21" />
+        <PackageReference Include="Akka.Bootstrap.Docker" Version="0.5.3" />
+        <PackageReference Include="Akka.DistributedData" Version="1.4.21" />
+        <PackageReference Include="Akka.DistributedData.LightningDB" Version="1.4.21" />
+        <PackageReference Include="Akka.Serialization.Hyperion" Version="1.4.21" />
     </ItemGroup>
 
     <ItemGroup>
@@ -29,6 +29,18 @@
 
     <ItemGroup>
       <None Remove="obj\**" />
+      <None Update="cluster-data1\data.mdb">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Include="bin\Debug\netcoreapp3.1\cluster-data2\data.mdb">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Include="bin\Debug\netcoreapp3.1\cluster-data3\data.mdb">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Include="bin\Debug\netcoreapp3.1\cluster-data4\data.mdb">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>

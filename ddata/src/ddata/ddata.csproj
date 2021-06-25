@@ -3,18 +3,19 @@
 
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
         <Description>Your description here.</Description>
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
+        <LangVersion>9</LangVersion>
     </PropertyGroup>
 
 
     <ItemGroup>
-      <PackageReference Include="Akka" Version="1.4.19" />
-      <PackageReference Include="Akka.DistributedData" Version="1.4.19" />
-      <PackageReference Include="Akka.DistributedData.LightningDB" Version="1.4.19" />
-      <PackageReference Include="Akka.Serialization.Hyperion" Version="1.4.19" />
+      <PackageReference Include="Akka" Version="1.4.21" />
+      <PackageReference Include="Akka.DistributedData" Version="1.4.21" />
+      <PackageReference Include="Akka.DistributedData.LightningDB" Version="1.4.21" />
+      <PackageReference Include="Akka.Serialization.Hyperion" Version="1.4.21" />
     </ItemGroup>
 
 

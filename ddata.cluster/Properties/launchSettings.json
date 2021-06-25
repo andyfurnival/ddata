@@ -4,7 +4,7 @@
     "ddata.cluster.1": {
       "commandName": "Project",
       "environmentVariables": {
-        "test": "*",
+        "test": "Event*",
         "akka__cluster__distributed-data__durable__lmdb__dir": "cluster-data1",
         "akka__remote__dot-netty__tcp__port": "18001"
         
@@ -13,6 +13,7 @@
     "ddata.cluster.2": {
       "commandName": "Project",
       "environmentVariables": {
+        "test": "Event*",
         "akka__cluster__distributed-data__durable__lmdb__dir": "cluster-data2",
         "akka__remote__dot-netty__tcp__port": "18002"
        

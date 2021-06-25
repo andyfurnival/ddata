@@ -17,18 +17,20 @@
             "distributed-data" : {
                 "durable" : {
                     "lmdb" : {
-                        "map-size" : 104857600,
+                        "map-size" : "100 MiB",
                         "write-behind-interval" : "200 ms"
                     },
                     "store-actor-class" : "Akka.DistributedData.LightningDB.LmdbDurableStore, Akka.DistributedData.LightningDB"
                 }
+                "gossip-interval" = "4 s"
                 "delta-crdt" {
                     # enable or disable delta-CRDT replication
                     "enabled" = on
 
                     # Some complex deltas grow in size for each update and above this
                     # threshold such deltas are discarded and sent as full state instead.
-                    "max-delta-size" = 100
+            
+                 
                 }
             },
             "roles" : [

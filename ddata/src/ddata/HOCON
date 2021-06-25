@@ -12,15 +12,15 @@ akka {
       hyperion="Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"
     }
   }
+  serialize-messages = on
   cluster {
     distributed-data {
+      pruning-marker-time-to-live = "30 s"
       durable {
-        keys=[
-          "*"
-        ]
+        pruning-marker-time-to-live = "60 s"
         lmdb {
-          dir=cluster-data
-          map-size=104857600
+          dir="cluster-data/cluster"
+          map-size = "100 MiB"
           write-behind-interval="200 ms"
         }
         store-actor-class="Akka.DistributedData.LightningDB.LmdbDurableStore, Akka.DistributedData.LightningDB"
@@ -38,21 +38,24 @@ akka {
   extensions=[
     "Akka.DistributedData.DistributedDataProvider, Akka.DistributedData"
   ]
-  loglevel=WARNING
+  loglevel = INFO
+  stdout-loglevel = INFO
   test {
     timefactor=10
   }
-}
-remote {
-  dot-netty {
-    tcp {
-      maximum-frame-size="350000b"
-      message-frame-size="300000b"
-      port=4256
-      receive-buffer-size="300000b"
-      send-buffer-size="300000b"
+
+  remote {
+    dot-netty {
+      tcp {
+        maximum-frame-size="350000b"
+        message-frame-size="300000b"
+        port=4256
+        receive-buffer-size="300000b"
+        send-buffer-size="300000b"
+        hostname = "0.0.0.0"
+      }
     }
+    log-sent-messages=on
+    maximum-payload-bytes="350000 bytes"
   }
-  log-sent-messages=on
-  maximum-payload-bytes="350000 bytes"
 }
