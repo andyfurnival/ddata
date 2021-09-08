@@ -16,8 +16,7 @@
         "cluster" : {
             "distributed-data" : {
                 "durable" : {
-                    "keys" : [
-                        "*"
+                    "keys" : [ "Event"
                     ],
                     "lmdb" : {
                         "dir" : "cluster-data1",

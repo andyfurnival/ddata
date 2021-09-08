@@ -19,7 +19,7 @@ akka {
           "*"
         ]
         lmdb {
-          dir=cluster-data
+          dir=cluster-data/
           map-size=104857600
           write-behind-interval="200 ms"
         }
@@ -38,7 +38,7 @@ akka {
   extensions=[
     "Akka.DistributedData.DistributedDataProvider, Akka.DistributedData"
   ]
-  loglevel=WARNING
+  loglevel=INFO
   test {
     timefactor=10
   }

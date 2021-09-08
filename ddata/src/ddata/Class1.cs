@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
@@ -23,23 +24,38 @@ namespace ddata
             var sys = ActorSystem.Create("test", cfg);
             var dd = DistributedData.Get(sys);
             int emptyKeyCount = 0;
+            int marketCount = 0, eventCount = 0, totalMarketCount = 0;
             
             var resp = await dd.Replicator.Ask<GetKeysIdsResult>(Dsl.GetKeyIds);
 
             foreach (var resultKey in resp.Keys)
             {
-                var key = new ORSetKey<string>($"{resultKey}");
+                var key = new ORDictionaryKey<string, GSet<string>>($"{resultKey}");
 
                 var keyResp = await dd.Replicator.Ask<IGetResponse>(Dsl.Get(key));
 
                 Console.ForegroundColor = ConsoleColor.Green;
-                if (keyResp.Get(key).Elements.Count == 0) emptyKeyCount++;
+                if (keyResp.Get(key).Entries.Count == 0) emptyKeyCount++;
+                eventCount += keyResp.Get(key).Entries.Keys.Count();
                 
-                Console.WriteLine($"{key.Id}\t{string.Join<string>(",", keyResp.Get(key).Elements)}");
+                var elements = keyResp.Get(key).Entries;
+                
+                foreach(var @event in elements.Keys)
+                {
+                    marketCount = elements
+                        .Where(x => x.Key.Equals($"{@event}"))
+                        .SelectMany(y => y.Value).Count();
+
+                    totalMarketCount += marketCount;
+                    
+                    Console.WriteLine($"{@event} has {marketCount} markets ");
+                }
+                
             }
             
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Finished loading {resp.Keys.Count} keys. There were {emptyKeyCount} empty keys");
+            Console.WriteLine($"There is a total of {eventCount} events and {totalMarketCount} markets.");
             Console.ForegroundColor = originalColour;
         }
     }
